@@ -11,7 +11,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build # Requiere next.config.js con output: "standalone"
+RUN npm run build # Requiere next.config.ts con output: "standalone"
 
 FROM base AS runner
 WORKDIR /app
