@@ -11,8 +11,17 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "https://dashboard.tu-dominio.com",
-    # Add more origins from os.getenv("BACKEND_CORS_ORIGINS") later
-]
+import json
+import os
+
+cors_origins_str = os.getenv("BACKEND_CORS_ORIGINS", "")
+if cors_origins_str:
+    try:
+        origins_from_env = json.loads(cors_origins_str)
+        origins.extend(origins_from_env)
+    except json.JSONDecodeError:
+        origins.append(cors_origins_str)
+
 
 app.add_middleware(
     CORSMiddleware,
