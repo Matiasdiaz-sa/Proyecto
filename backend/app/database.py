@@ -9,7 +9,11 @@ client: AsyncIOMotorClient = None
 
 async def connect_to_mongo():
     global client
-    client = AsyncIOMotorClient(MONGO_URI)
+    client = AsyncIOMotorClient(
+        MONGO_URI,
+        tls=True,
+        tlsAllowInvalidCertificates=True
+    )
 
 
 async def close_mongo_connection():
