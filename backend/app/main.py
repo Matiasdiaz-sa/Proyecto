@@ -11,6 +11,8 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "https://dashboard.tu-dominio.com",
+]
+
 import json
 import os
 
