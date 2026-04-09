@@ -31,7 +31,12 @@ export default function Home() {
       setResult(data as Record<string, unknown>);
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Error desconocido";
-      setResult({ error: errorMsg });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000/api/v1";
+      setResult({ 
+        error_type: "Failed to fetch_network_or_CORS",
+        message: errorMsg,
+        api_url_usada: apiUrl
+      });
     } finally {
       setLoading(false);
     }
