@@ -185,8 +185,8 @@ class ChatRequest(BaseModel):
     maps_url: Optional[str] = None
     maps_limit: Optional[int] = 50
     conversation_history: Optional[PyList[ChatMessage]] = []
-    # If reviews are already loaded (embedded from previous scrape), pass them directly
     reviews: Optional[PyList[dict]] = None
+    analysis_report: Optional[dict] = None   # pre-generated report from /analyze
 
 
 @app.post("/api/v1/chat", tags=["chat"])
@@ -226,7 +226,8 @@ async def chat_endpoint(request: ChatRequest):
             message=request.message,
             conversation_history=history,
             reviews=reviews,
-            business_name=request.business_name or "el negocio"
+            business_name=request.business_name or "el negocio",
+            analysis_report=request.analysis_report
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en chat IA: {str(e)}")

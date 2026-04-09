@@ -20,21 +20,27 @@ def _build_reviews_context(reviews: List[Dict[str, Any]], business_name: str) ->
 
 
 SYSTEM_PROMPT_TEMPLATE = """Sos un analista experto en experiencia del cliente y reputación online.
-Tenés acceso a las reseñas reales del negocio "{business_name}".
-Tu rol es responder preguntas de forma conversacional, concisa y profesional, como si fueras un consultor de negocio.
+Analizaste las reseñas del negocio "{business_name}" y generaste el siguiente informe:
 
-CONTEXTO - RESEÑAS DEL NEGOCIO ({review_count} reseñas):
+INFORME DE ANÁLISIS:
+- Puntaje general: {overall_score}/10
+- Sentimiento: {sentiment_label}
+- Resumen ejecutivo: {executive_summary}
+- Puntos fuertes: {positive_themes}
+- Áreas de mejora: {negative_themes}
+- Recomendaciones: {recommendations}
+
+RESEÑAS ORIGINALES ({review_count} reseñas):
 ---
 {reviews_context}
 ---
 
 INSTRUCCIONES:
 - Respondé siempre en el mismo idioma que el usuario.
-- Basá tus respuestas EXCLUSIVAMENTE en las reseñas provistas. 
-- Si no tenés suficiente info para responder algo, decilo claramente.
-- Podés hacer análisis, detectar patrones, sugerir mejoras, comparar aspectos, generar reportes, etc.
-- Sé directo y útil. No uses frases genéricas de relleno.
-- Si el usuario pregunta algo que no está relacionado con las reseñas, redirigilo amablemente.
+- Podés referenciar el informe que generaste o profundizar en las reseñas originales.
+- Sé directo, profesional y útil como un consultor de negocio.
+- Si el usuario pide más detalle sobre algo del informe, buscá ese dato en las reseñas.
+- Si el usuario pregunta algo no relacionado con el negocio, redirigilo amablemente.
 """
 
 
@@ -42,16 +48,24 @@ async def chat_with_analyst(
     message: str,
     conversation_history: List[Dict[str, str]],
     reviews: List[Dict[str, Any]],
-    business_name: str = "el negocio"
+    business_name: str = "el negocio",
+    analysis_report: Dict[str, Any] = None
 ) -> str:
     """
-    Chat with the review analyst. Uses reviews as context via system prompt.
+    Chat with the review analyst. Uses reviews and the pre-generated report as context.
     """
     reviews_context = _build_reviews_context(reviews, business_name)
+    report = analysis_report or {}
     
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         business_name=business_name,
         review_count=len(reviews),
+        overall_score=report.get("overall_score", "N/A"),
+        sentiment_label=report.get("sentiment_label", "N/A"),
+        executive_summary=report.get("executive_summary", "Aún no se generó un informe."),
+        positive_themes=", ".join(report.get("positive_themes", [])) or "N/A",
+        negative_themes=", ".join(report.get("negative_themes", [])) or "N/A",
+        recommendations="; ".join(report.get("recommendations", [])) or "N/A",
         reviews_context=reviews_context if reviews_context else "No hay reseñas cargadas aún."
     )
 
