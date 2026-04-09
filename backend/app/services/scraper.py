@@ -2,52 +2,48 @@ import os
 import httpx
 from typing import List, Dict, Any
 
-OUTSCRAPER_API_KEY = os.environ.get("OUTSCRAPER_API_KEY", "")
+APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "")
 
-async def scrape_google_maps_reviews(maps_url: str, reviews_limit: int = 20) -> List[Dict[str, Any]]:
+async def scrape_google_maps_reviews(maps_url: str, reviews_limit: int = 15) -> List[Dict[str, Any]]:
     """
-    Scrapes reviews from a Google Maps URL using the Outscraper API.
+    Scrapes reviews from a Google Maps URL using Apify's API.
     """
-    if not OUTSCRAPER_API_KEY:
-        raise ValueError("La clave OUTSCRAPER_API_KEY no está configurada en el servidor.")
+    if not APIFY_TOKEN:
+        raise ValueError("La clave APIFY_TOKEN no está configurada en el servidor.")
 
-    api_url = "https://api.outscraper.com/maps/reviews-v3"
+    # Endpoint oficial de Apify para ejecutar un actor y esperar sus datos
+    api_url = f"https://api.apify.com/v2/acts/compass~google-maps-reviews-scraper/run-sync-get-dataset-items"
     
     params = {
-        "query": maps_url,
-        "reviewsLimit": reviews_limit,
-        "async": "false" 
+        "token": APIFY_TOKEN
     }
 
-    headers = {
-        "X-API-KEY": OUTSCRAPER_API_KEY
+    # Input que le enviamos al robot de Apify
+    payload = {
+        "startUrls": [{"url": maps_url}],
+        "maxReviews": reviews_limit,
+        "language": "es"
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.get(api_url, params=params, headers=headers)
+    # Este proceso puede tardar un poquito porque levanta un navegador fantasma real en Apify
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(api_url, params=params, json=payload)
         
-        if response.status_code != 200:
-            raise Exception(f"Error de Outscraper: {response.text}")
+        if response.status_code != 200 and response.status_code != 201:
+            raise Exception(f"Error de Apify: {response.text}")
             
         data = response.json()
         
-        # Estructura devuelta por Outscraper
-        if "data" in data and len(data["data"]) > 0:
-            place_data = data["data"][0]
-            reviews_list = place_data.get("reviews_data", [])
-            
-            formatted_reviews = []
-            for r in reviews_list:
-                # Solo guardamos reseñas que tengan texto útil
-                texto = r.get("review_text", "")
-                if texto and len(texto.strip()) > 2:
-                    formatted_reviews.append({
-                        "author": r.get("author_title", "Anónimo"),
-                        "rating": r.get("review_rating", 5),
-                        "text": texto,
-                        "datetime": r.get("review_datetime_utc", "")
-                    })
-            
-            return formatted_reviews
+        # Apify devuelve directamente la lista de reseñas
+        formatted_reviews = []
+        for r in data:
+            texto = r.get("textTranslated", r.get("text", ""))
+            if texto and len(texto.strip()) > 2:
+                formatted_reviews.append({
+                    "author": r.get("name", "Anónimo"),
+                    "rating": r.get("stars", 5),
+                    "text": texto,
+                    "datetime": r.get("publishedAtDate", "")
+                })
         
-        return []
+        return formatted_reviews
