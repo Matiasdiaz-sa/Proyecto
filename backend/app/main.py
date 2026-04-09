@@ -8,12 +8,7 @@ app = FastAPI(
 )
 
 # Set all CORS enabled origins
-origins = [
-    "http://localhost:3000",
-    "https://dashboard.tu-dominio.com",
-    "https://proyecto-nine-gules.vercel.app",
-    "https://proyecto-spsj.vercel.app"
-]
+origins = ["*"]
 
 import json
 import os
