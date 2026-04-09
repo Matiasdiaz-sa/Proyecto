@@ -14,6 +14,14 @@ export default function Home() {
     setResult(null);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000/api/v1";
+      
+      // Muestra temporalmente el apiUrl para debuguear
+      setResult({ 
+        mensaje: "Iniciando fetch...", 
+        debug_api_url_usado: apiUrl,
+        link_api: `${apiUrl}/reviews/scrape`
+      });
+
       const res = await fetch(`${apiUrl}/reviews/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
