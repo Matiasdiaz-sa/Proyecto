@@ -1,4 +1,4 @@
-import os
+ import os
 import httpx
 from typing import List, Dict, Any
 
@@ -22,7 +22,8 @@ async def scrape_google_maps_reviews(maps_url: str, reviews_limit: int = 15) -> 
     payload = {
         "startUrls": [{"url": maps_url}],
         "maxReviews": reviews_limit,
-        "language": "es"
+        "language": "es",
+        "personalData": True
     }
 
     # Este proceso puede tardar un poquito porque levanta un navegador fantasma real en Apify
@@ -37,7 +38,7 @@ async def scrape_google_maps_reviews(maps_url: str, reviews_limit: int = 15) -> 
         # Apify devuelve directamente la lista de reseñas
         formatted_reviews = []
         for r in data:
-            texto = r.get("textTranslated", r.get("text", ""))
+            texto = r.get("textTranslated") or r.get("text") or ""
             if texto and len(texto.strip()) > 2:
                 formatted_reviews.append({
                     "author": r.get("name", "Anónimo"),
