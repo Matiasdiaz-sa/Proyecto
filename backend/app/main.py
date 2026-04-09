@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import os
@@ -43,7 +43,7 @@ def read_root():
 
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 
 
@@ -52,7 +52,17 @@ class ScrapeRequest(BaseModel):
     limit: Optional[int] = 20
 
 
+class AnalyzeRequest(BaseModel):
+    business_name: Optional[str] = "el negocio"
+    maps_url: Optional[str] = None
+    maps_limit: Optional[int] = 100
+    website_url: Optional[str] = None
+    manual_reviews: Optional[List[str]] = []
+
+
 from app.services.scraper import scrape_google_maps_reviews
+from app.services.sentiment import analyze_reviews
+from app.services.web_scraper import scrape_website_reviews
 
 
 @app.post("/api/v1/reviews/scrape", tags=["reviews"])
@@ -88,3 +98,71 @@ async def get_reviews(limit: int = 50):
     reviews = await cursor.to_list(length=limit)
     return {"status": "success", "count": len(reviews), "data": reviews}
 
+
+@app.post("/api/v1/analyze", tags=["analysis"])
+async def analyze_business(request: AnalyzeRequest):
+    """
+    Full analyst endpoint. Combines reviews from:
+    - Google Maps (via Apify)
+    - Business website (via web scraper)
+    - Manually provided reviews
+    Then runs AI analysis and returns a professional report.
+    """
+    from fastapi import HTTPException
+    all_reviews = []
+    sources_used = []
+
+    # 1. Google Maps reviews
+    if request.maps_url:
+        try:
+            limit = min(request.maps_limit or 100, 300)  # cap at 300
+            maps_reviews = await scrape_google_maps_reviews(request.maps_url, limit)
+            for r in maps_reviews:
+                r["source"] = "google_maps"
+            all_reviews.extend(maps_reviews)
+            sources_used.append(f"Google Maps ({len(maps_reviews)} reseñas)")
+
+            # Save to MongoDB
+            if maps_reviews:
+                db = get_database()
+                collection = db["reviews"]
+                docs = [{**r, "source_url": request.maps_url, "scraped_at": datetime.now(timezone.utc)} for r in maps_reviews]
+                await collection.insert_many(docs)
+        except Exception as e:
+            sources_used.append(f"Google Maps (error: {str(e)[:80]})")
+
+    # 2. Website reviews
+    if request.website_url:
+        try:
+            web_reviews = await scrape_website_reviews(request.website_url)
+            all_reviews.extend(web_reviews)
+            sources_used.append(f"Sitio web ({len(web_reviews)} reseñas)")
+        except Exception as e:
+            sources_used.append(f"Sitio web (error: {str(e)[:80]})")
+
+    # 3. Manual reviews
+    if request.manual_reviews:
+        for text in request.manual_reviews:
+            if text.strip():
+                all_reviews.append({
+                    "author": "Manual",
+                    "rating": None,
+                    "text": text.strip(),
+                    "datetime": "",
+                    "source": "manual"
+                })
+        sources_used.append(f"Reseñas manuales ({len(request.manual_reviews)})")
+
+    if not all_reviews:
+        raise HTTPException(status_code=400, detail="No se encontraron reseñas para analizar. Verificá la URL de Maps o agregá reseñas manualmente.")
+
+    # Run AI analysis
+    try:
+        report = await analyze_reviews(all_reviews, request.business_name or "el negocio")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en análisis IA: {str(e)}")
+
+    report["sources_used"] = sources_used
+    report["total_reviews_combined"] = len(all_reviews)
+
+    return {"status": "success", "report": report}
