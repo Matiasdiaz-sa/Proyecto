@@ -166,3 +166,73 @@ async def analyze_business(request: AnalyzeRequest):
     report["total_reviews_combined"] = len(all_reviews)
 
     return {"status": "success", "report": report}
+
+
+# ── CHAT ENDPOINT ──────────────────────────────────────────────────────────────
+
+from app.services.chat import chat_with_analyst
+from typing import List as PyList
+
+
+class ChatMessage(BaseModel):
+    role: str   # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    business_name: Optional[str] = "el negocio"
+    maps_url: Optional[str] = None
+    maps_limit: Optional[int] = 50
+    conversation_history: Optional[PyList[ChatMessage]] = []
+    # If reviews are already loaded (embedded from previous scrape), pass them directly
+    reviews: Optional[PyList[dict]] = None
+
+
+@app.post("/api/v1/chat", tags=["chat"])
+async def chat_endpoint(request: ChatRequest):
+    """
+    Conversational analyst chat. Loads reviews from Maps if maps_url provided
+    (and they're not already passed in), then answers the user's question.
+    """
+    from fastapi import HTTPException
+
+    reviews = request.reviews or []
+
+    # Load from Maps if URL provided and no reviews passed
+    if request.maps_url and not reviews:
+        try:
+            limit = min(request.maps_limit or 50, 300)
+            reviews = await scrape_google_maps_reviews(request.maps_url, limit)
+
+            # Save to MongoDB
+            if reviews:
+                db = get_database()
+                collection = db["reviews"]
+                docs = [
+                    {**r, "source_url": request.maps_url, "scraped_at": datetime.now(timezone.utc)}
+                    for r in reviews
+                ]
+                await collection.insert_many(docs)
+        except Exception as e:
+            # Don't hard-fail — respond with context of error
+            reviews = []
+
+    # Build history list for OpenAI
+    history = [{"role": m.role, "content": m.content} for m in (request.conversation_history or [])]
+
+    try:
+        reply = await chat_with_analyst(
+            message=request.message,
+            conversation_history=history,
+            reviews=reviews,
+            business_name=request.business_name or "el negocio"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en chat IA: {str(e)}")
+
+    return {
+        "status": "success",
+        "reply": reply,
+        "reviews_loaded": len(reviews),
+    }
