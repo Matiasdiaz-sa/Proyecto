@@ -11,6 +11,8 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "https://dashboard.tu-dominio.com",
+    "https://proyecto-nine-gules.vercel.app",
+    "https://proyecto-spsj.vercel.app"
 ]
 
 import json
