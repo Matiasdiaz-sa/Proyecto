@@ -4,24 +4,25 @@ import { useState } from "react";
 export default function Home() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  // Remove object any typing to avoid ESLint strict errors
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const testScraper = async () => {
     if (!url) return;
     setLoading(true);
     setResult(null);
     try {
-      // Reemplaza dobles barras al final si existieran
       const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:8000/api/v1";
       const res = await fetch(`${apiUrl}/reviews/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, limit: 5 }) // Extraemos 5 para probar rápido
+        body: JSON.stringify({ url, limit: 5 }) 
       });
       const data = await res.json();
-      setResult(data);
-    } catch (e: any) {
-      setResult({ error: e.message });
+      setResult(data as Record<string, unknown>);
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Error desconocido";
+      setResult({ error: errorMsg });
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,7 @@ export default function Home() {
         <div className="w-full bg-zinc-950 rounded-xl p-8 border border-zinc-800 flex flex-col space-y-4">
           <h2 className="text-xl font-semibold mb-2 text-center">Extracción de Google Maps</h2>
           <p className="text-zinc-500 text-sm text-center mb-4">
-            Pega un enlace de Google Maps aquí abajo. Nuestro servidor se conectará en vivo y extraerá de forma "Scraper" las reseñas reales del local.
+            Pega un enlace de Google Maps aquí abajo. Nuestro servidor se conectará en vivo y extraerá de forma &quot;Scraper&quot; las reseñas reales del local.
           </p>
           <input
             type="text"
