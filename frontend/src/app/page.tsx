@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [limit, setLimit] = useState(5);
   const [loading, setLoading] = useState(false);
   // Remove object any typing to avoid ESLint strict errors
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -25,7 +26,7 @@ export default function Home() {
       const res = await fetch(`${apiUrl}/reviews/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, limit: 5 }) 
+        body: JSON.stringify({ url, limit: limit }) 
       });
       const data = await res.json();
       setResult(data as Record<string, unknown>);
@@ -69,6 +70,21 @@ export default function Home() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
+          
+          <div className="w-full flex items-center justify-between bg-zinc-900 p-4 rounded-lg border border-zinc-700">
+            <span className="text-zinc-300 font-medium">Cantidad de Reseñas:</span>
+            <select 
+              className="bg-zinc-800 text-white border border-zinc-600 rounded-md p-2 outline-none"
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+            >
+              <option value={5}>5 (Rápido, Prueba)</option>
+              <option value={20}>20 Reseñas</option>
+              <option value={50}>50 Reseñas</option>
+              <option value={100}>100 Reseñas</option>
+            </select>
+          </div>
+
           <button 
             className={`w-full p-4 rounded-lg font-bold shadow-lg transition-all ${loading ? "bg-zinc-800 text-zinc-500 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500 text-white"}`}
             onClick={testScraper}
