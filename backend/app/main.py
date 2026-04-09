@@ -40,3 +40,21 @@ def health_check():
 @app.get("/", tags=["root"])
 def read_root():
     return {"message": "Welcome to Sentiment AI System API"}
+
+from pydantic import BaseModel
+from typing import Optional
+
+class ScrapeRequest(BaseModel):
+    url: str
+    limit: Optional[int] = 20
+
+from app.services.scraper import scrape_google_maps_reviews
+
+@app.post("/api/v1/reviews/scrape", tags=["reviews"])
+async def scrape_reviews(request: ScrapeRequest):
+    try:
+        reviews = await scrape_google_maps_reviews(request.url, request.limit)
+        return {"status": "success", "count": len(reviews), "data": reviews}
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=str(e))
