@@ -24,10 +24,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS - allow all origins
+# CORS - acepta producción, todos los previews de Vercel y localhost
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://proyecto-spsj.vercel.app", "http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
