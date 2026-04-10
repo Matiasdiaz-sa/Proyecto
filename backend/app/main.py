@@ -218,7 +218,7 @@ async def chat_endpoint(request: ChatRequest):
             # Don't hard-fail — respond with context of error
             reviews = []
 
-    # Build history list for OpenAI
+    # Build history list for Gemini/OpenAI
     history = [{"role": m.role, "content": m.content} for m in (request.conversation_history or [])]
 
     try:

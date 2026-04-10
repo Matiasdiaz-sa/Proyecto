@@ -3,7 +3,10 @@ import json
 from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
+client = AsyncOpenAI(
+    api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("OPENAI_API_KEY", "")),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
 
 
 def _build_reviews_context(reviews: List[Dict[str, Any]], business_name: str) -> str:
@@ -79,7 +82,7 @@ async def chat_with_analyst(
     messages.append({"role": "user", "content": message})
 
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gemini-1.5-flash",
         messages=messages,
         temperature=0.6,
         max_tokens=600

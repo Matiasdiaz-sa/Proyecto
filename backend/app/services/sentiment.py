@@ -3,7 +3,10 @@ import json
 from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
-client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
+client = AsyncOpenAI(
+    api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("OPENAI_API_KEY", "")),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
 
 BATCH_SIZE = 30  # reviews per batch to stay within token limits
 
@@ -39,7 +42,7 @@ Return this exact JSON structure:
 }}"""
 
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gemini-1.5-flash",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         response_format={"type": "json_object"}
@@ -54,7 +57,7 @@ async def _detect_language(reviews: List[Dict[str, Any]]) -> str:
 Text: {sample}"""
     
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gemini-1.5-flash",
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_tokens=10
@@ -119,7 +122,7 @@ Respond in {language} with ONLY a valid JSON object:
 }}"""
 
     final_response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gemini-1.5-flash",
         messages=[{"role": "user", "content": synthesis_prompt}],
         temperature=0.4,
         response_format={"type": "json_object"}
