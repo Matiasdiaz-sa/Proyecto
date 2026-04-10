@@ -42,7 +42,7 @@ Return this exact JSON structure:
 }}"""
 
     response = await client.chat.completions.create(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         response_format={"type": "json_object"}
@@ -57,7 +57,7 @@ async def _detect_language(reviews: List[Dict[str, Any]]) -> str:
 Text: {sample}"""
     
     response = await client.chat.completions.create(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash",
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_tokens=10
@@ -122,7 +122,7 @@ Respond in {language} with ONLY a valid JSON object:
 }}"""
 
     final_response = await client.chat.completions.create(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash",
         messages=[{"role": "user", "content": synthesis_prompt}],
         temperature=0.4,
         response_format={"type": "json_object"}
