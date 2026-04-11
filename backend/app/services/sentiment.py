@@ -4,8 +4,8 @@ from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("OPENAI_API_KEY", "")),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    api_key="ollama", # Not actually used by Ollama, but required by openai library
+    base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 )
 
 BATCH_SIZE = 30  # reviews per batch to stay within token limits
@@ -42,7 +42,7 @@ Return this exact JSON structure:
 }}"""
 
     response = await client.chat.completions.create(
-        model="gemini-2.0-flash",
+        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         response_format={"type": "json_object"}
@@ -57,7 +57,7 @@ async def _detect_language(reviews: List[Dict[str, Any]]) -> str:
 Text: {sample}"""
     
     response = await client.chat.completions.create(
-        model="gemini-2.0-flash",
+        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_tokens=10
@@ -122,7 +122,7 @@ Respond in {language} with ONLY a valid JSON object:
 }}"""
 
     final_response = await client.chat.completions.create(
-        model="gemini-2.0-flash",
+        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
         messages=[{"role": "user", "content": synthesis_prompt}],
         temperature=0.4,
         response_format={"type": "json_object"}

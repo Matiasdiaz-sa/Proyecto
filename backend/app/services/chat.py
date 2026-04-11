@@ -4,8 +4,8 @@ from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("OPENAI_API_KEY", "")),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    api_key="ollama", # Not actually used by Ollama, but required by openai library
+    base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 )
 
 
@@ -82,7 +82,7 @@ async def chat_with_analyst(
     messages.append({"role": "user", "content": message})
 
     response = await client.chat.completions.create(
-        model="gemini-2.0-flash",
+        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
         messages=messages,
         temperature=0.6,
         max_tokens=600
