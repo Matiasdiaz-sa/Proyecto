@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
     api_key="ollama", # Not actually used by Ollama, but required by openai library
-    base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    base_url=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
 )
 
 BATCH_SIZE = 30  # reviews per batch to stay within token limits
