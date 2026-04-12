@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Report, Review, State } from "@/types";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { Gauge } from "@/components/ui/Gauge";
 import { Div } from "@/components/ui/Div";
 
@@ -24,6 +25,7 @@ function renderBold(text: string) {
 
 export function ReportView({ report, bizName, reviews, setState, startChat }: Props) {
   const [tab, setTab] = useState<"pos" | "neg" | "rec">("pos");
+  const { isSignedIn } = useUser();
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -51,9 +53,17 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
           <button className="btn-ghost no-print" onClick={() => window.print()} title="Descargar PDF">
             📥 PDF
           </button>
-          <button className="btn-ghost no-print" onClick={startChat}>
-            Conversar con el informe →
-          </button>
+          {isSignedIn ? (
+            <button className="btn-ghost no-print" onClick={startChat}>
+              Conversar con el informe →
+            </button>
+          ) : (
+            <SignInButton mode="modal" fallbackRedirectUrl="/">
+              <button className="btn-ghost no-print">
+                Conversar con el informe 🔒
+              </button>
+            </SignInButton>
+          )}
         </div>
       </header>
 
@@ -129,9 +139,17 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
 
         <Div />
 
-        <button className="btn-primary no-print" onClick={startChat}>
-          Conversar sobre este informe →
-        </button>
+        {isSignedIn ? (
+          <button className="btn-primary no-print" onClick={startChat}>
+            Conversar sobre este informe →
+          </button>
+        ) : (
+          <SignInButton mode="modal" fallbackRedirectUrl="/">
+            <button className="btn-primary no-print" style={{ display: "flex", alignItems: "center", gap: "8px", margin: "0 auto" }}>
+              🔒 Iniciar sesión para conversar
+            </button>
+          </SignInButton>
+        )}
       </main>
     </div>
   );
