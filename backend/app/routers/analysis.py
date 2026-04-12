@@ -73,4 +73,19 @@ async def analyze_business(request: AnalyzeRequest):
     report["sources_used"] = sources_used
     report["total_reviews_combined"] = len(all_reviews)
 
+    # Save to MongoDB reports collection if user_id is provided
+    if request.user_id:
+        try:
+            db = get_database()
+            rep_col = db["reports"]
+            await rep_col.insert_one({
+                "user_id": request.user_id,
+                "business_name": request.business_name or "el negocio",
+                "maps_url": request.maps_url,
+                "report": report,
+                "created_at": datetime.now(timezone.utc)
+            })
+        except Exception as e:
+            print(f"Error saving report to DB: {e}")
+
     return {"status": "success", "report": report}

@@ -11,6 +11,17 @@ interface Props {
   startChat: () => void;
 }
 
+function renderBold(text: string) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ color: "var(--text)" }}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export function ReportView({ report, bizName, reviews, setState, startChat }: Props) {
   const [tab, setTab] = useState<"pos" | "neg" | "rec">("pos");
 
@@ -36,9 +47,14 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
             <div className="label">{reviews.length} reseñas analizadas</div>
           </div>
         </div>
-        <button className="btn-ghost" onClick={startChat}>
-          Conversar con el informe →
-        </button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <button className="btn-ghost no-print" onClick={() => window.print()} title="Descargar PDF">
+            📥 PDF
+          </button>
+          <button className="btn-ghost no-print" onClick={startChat}>
+            Conversar con el informe →
+          </button>
+        </div>
       </header>
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "3rem 1.5rem" }}>
@@ -55,7 +71,7 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
             maxWidth: 520, margin: "12px auto 0", color: "var(--text-muted)",
             fontSize: "0.9rem", lineHeight: 1.65,
           }}>
-            {report.executive_summary}
+            {renderBold(report.executive_summary)}
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 16 }}>
             <span className="chip">🌐 {report.language_detected}</span>
@@ -65,34 +81,38 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
 
         <Div />
 
-        {/* Tabs */}
-        <div style={{ display: "flex", borderBottom: "1px solid var(--s2)", marginBottom: "1.75rem" }}>
+        <div className="no-print" style={{ display: "flex", borderBottom: "1px solid var(--s2)", marginBottom: "1.75rem" }}>
           <button className={tab === "pos" ? "tab active" : "tab"} onClick={() => setTab("pos")}>Puntos fuertes</button>
           <button className={tab === "neg" ? "tab active" : "tab"} onClick={() => setTab("neg")}>Áreas de mejora</button>
           <button className={tab === "rec" ? "tab active" : "tab"} onClick={() => setTab("rec")}>Recomendaciones</button>
         </div>
 
-        {tab === "pos" && (
+        <div style={{ display: tab === "pos" ? "block" : "none" }} className="print-block">
+          <h3 className="no-screen" style={{ marginBottom: "1rem", display: "none" }}>Puntos Fuertes</h3>
           <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
             {report.positive_themes.map((t, i) => (
               <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <span style={{ color: "var(--text-dim)", fontWeight: 700, fontSize: "0.75rem", marginTop: 3 }}>0{i + 1}</span>
-                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.5 }}>{t}</span>
+                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.5 }}>{renderBold(t)}</span>
               </li>
             ))}
           </ul>
-        )}
-        {tab === "neg" && (
+        </div>
+
+        <div style={{ display: tab === "neg" ? "block" : "none", marginTop: "2rem" }} className="print-block">
+          <h3 className="no-screen" style={{ marginBottom: "1rem", display: "none" }}>Áreas de Mejora</h3>
           <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
             {report.negative_themes.map((t, i) => (
               <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <span style={{ color: "var(--text-dim)", fontWeight: 700, fontSize: "0.75rem", marginTop: 3 }}>0{i + 1}</span>
-                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.5 }}>{t}</span>
+                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.5 }}>{renderBold(t)}</span>
               </li>
             ))}
           </ul>
-        )}
-        {tab === "rec" && (
+        </div>
+
+        <div style={{ display: tab === "rec" ? "block" : "none", marginTop: "2rem" }} className="print-block">
+          <h3 className="no-screen" style={{ marginBottom: "1rem", display: "none" }}>Recomendaciones</h3>
           <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 20 }}>
             {report.recommendations.map((r, i) => (
               <li key={i} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
@@ -101,15 +121,15 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
                   color: "var(--text)", fontSize: "0.75rem", fontWeight: 700,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}>{i + 1}</span>
-                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.55, paddingTop: 4 }}>{r}</span>
+                <span style={{ color: "var(--text)", fontSize: "0.9375rem", lineHeight: 1.55, paddingTop: 4 }}>{renderBold(r)}</span>
               </li>
             ))}
           </ol>
-        )}
+        </div>
 
         <Div />
 
-        <button className="btn-primary" onClick={startChat}>
+        <button className="btn-primary no-print" onClick={startChat}>
           Conversar sobre este informe →
         </button>
       </main>

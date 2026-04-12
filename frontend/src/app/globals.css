@@ -168,3 +168,26 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 4px; }
+
+/* ── Print ──────────────────────────────────────────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  .print-block { display: block !important; }
+  .no-screen { display: block !important; }
+  body {
+    background: white;
+    color: black;
+  }
+  :root {
+    --bg: #ffffff;
+    --s0: #f8f8f8;
+    --s1: #e0e0e0;
+    --s2: #f0f0f0;
+    --s3: #cccccc;
+    --s4: #aaaaaa;
+    --text: #000000;
+    --text-muted: #333333;
+    --text-dim: #666666;
+  }
+}
+

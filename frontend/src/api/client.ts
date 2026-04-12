@@ -12,10 +12,10 @@ export async function scrapeReviews(url: string, limit: number): Promise<{ data:
     return data;
 }
 
-export async function analyzeBusiness(bizName: string, mapsUrl: string, limit: number): Promise<Report> {
+export async function analyzeBusiness(bizName: string, mapsUrl: string, limit: number, userId?: string): Promise<Report> {
     const res = await fetch(`${API}/analyze`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business_name: bizName || "el negocio", maps_url: mapsUrl, maps_limit: limit }),
+        body: JSON.stringify({ business_name: bizName || "el negocio", maps_url: mapsUrl, maps_limit: limit, user_id: userId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail ?? "Error en análisis IA");
@@ -75,4 +75,13 @@ export async function sendChatMessageStream(
             }
         }
     }
+}
+
+export async function fetchWorkspaceReports(userId: string): Promise<any[]> {
+    const res = await fetch(`${API}/reports/${userId}`, {
+        method: "GET", headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail ?? "Error cargando el workspace");
+    return data.reports;
 }

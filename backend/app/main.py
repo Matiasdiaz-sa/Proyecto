@@ -8,7 +8,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.database import connect_to_mongo, close_mongo_connection
-from app.routers import reviews, analysis, chat
+from app.routers import reviews, analysis, chat, reports
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,6 +46,7 @@ def read_root():
 app.include_router(reviews.router)
 app.include_router(analysis.router)
 app.include_router(chat.router)
+app.include_router(reports.router)
 
 
 #slow_api

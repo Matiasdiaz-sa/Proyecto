@@ -11,6 +11,7 @@ class AnalyzeRequest(BaseModel):
     maps_limit: Optional[int] = 100
     website_url: Optional[str] = None
     manual_reviews: Optional[List[str]] = []
+    user_id: Optional[str] = None
 
 class ChatMessage(BaseModel):
     role: str

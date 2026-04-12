@@ -22,4 +22,4 @@ export interface Msg {
   content: string;
 }
 
-export type State = "setup" | "loading" | "report" | "chat";
+export type State = "setup" | "loading" | "report" | "chat" | "workspace";

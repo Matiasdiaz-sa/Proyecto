@@ -131,9 +131,9 @@ Respond in {language} with ONLY a valid JSON object:
 {{
   "overall_score": <float 0.0 to 10.0>,
   "sentiment_label": "<label in {language}>",
-  "positive_themes": ["top 5 unique positive themes"],
-  "negative_themes": ["top 5 unique negative themes"],
-  "executive_summary": "<professional 4-5 sentence summary as a business consultant>",
+  "positive_themes": ["top 5 unique positive themes (e.g. 'Theme Name (Mentioned by X%)')"],
+  "negative_themes": ["top 5 unique negative themes (e.g. 'Theme Name (Mentioned by X%)')"],
+  "executive_summary": "<professional 4-5 sentence summary as a business consultant. Use **bold markdown** to highlight key positive/negative words or core insights>",
   "recommendations": ["3 specific, actionable improvement recommendations"],
   "language_detected": "{language}",
   "total_reviews_analyzed": {len(reviews)}

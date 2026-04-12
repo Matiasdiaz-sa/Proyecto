@@ -1,13 +1,16 @@
 "use client";
 import React, { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Review, Report, Msg, State } from "@/types";
 import { analyzeBusiness, scrapeReviews, sendChatMessageStream } from "@/api/client";
 import { SetupView } from "@/components/views/SetupView";
 import { LoadingView } from "@/components/views/LoadingView";
 import { ReportView } from "@/components/views/ReportView";
 import { ChatView } from "@/components/views/ChatView";
+import { WorkspaceView } from "@/components/views/WorkspaceView";
 
 export default function App() {
+  const { user } = useUser();
   const [state, setState] = useState<State>("setup");
   const [bizName, setBizName] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
@@ -31,7 +34,7 @@ export default function App() {
       setReviews(d1.data);
 
       setLoadMsg(`Analizando ${d1.count} reseñas con IA…`);
-      const d2 = await analyzeBusiness(bizName, mapsUrl, limit);
+      const d2 = await analyzeBusiness(bizName, mapsUrl, limit, user?.id);
       setReport(d2);
       setState("report");
     } catch (e) {
@@ -83,6 +86,16 @@ export default function App() {
       mapsUrl={mapsUrl} setMapsUrl={setMapsUrl} 
       limit={limit} setLimit={setLimit} 
       error={error} handleAnalyze={handleAnalyze} 
+      openWorkspace={() => setState("workspace")}
+    />
+  );
+
+  if (state === "workspace") return (
+    <WorkspaceView 
+      setState={setState} 
+      setReport={setReport}
+      setBizName={setBizName}
+      setReviews={setReviews}
     />
   );
 
