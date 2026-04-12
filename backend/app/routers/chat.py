@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from app.database import get_database
 from app.schemas import ChatRequest
-from app.services.chat import chat_with_analyst
+from app.services.chat import stream_chat_with_analyst
 from app.services.scraper import scrape_google_maps_reviews
 
 router = APIRouter()
@@ -11,7 +12,7 @@ router = APIRouter()
 async def chat_endpoint(request: ChatRequest):
     """
     Conversational analyst chat. Loads reviews from Maps if maps_url provided
-    (and they're not already passed in), then answers the user's question.
+    (and they're not already passed in), then answers the user's question via streaming.
     """
     reviews = request.reviews or []
 
@@ -34,22 +35,17 @@ async def chat_endpoint(request: ChatRequest):
             # Don't hard-fail — respond with context of error
             reviews = []
 
-    # Build history list for Gemini/OpenAI
+    # Build history list for Ollama
     history = [{"role": m.role, "content": m.content} for m in (request.conversation_history or [])]
 
     try:
-        reply = await chat_with_analyst(
+        generator = stream_chat_with_analyst(
             message=request.message,
             conversation_history=history,
             reviews=reviews,
             business_name=request.business_name or "el negocio",
             analysis_report=request.analysis_report
         )
+        return StreamingResponse(generator, media_type="text/event-stream")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en chat IA: {str(e)}")
-
-    return {
-        "status": "success",
-        "reply": reply,
-        "reviews_loaded": len(reviews),
-    }

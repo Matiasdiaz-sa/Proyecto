@@ -4,12 +4,29 @@ from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key="ollama", # Not actually used by Ollama, but required by openai library
-    base_url=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
+    api_key=os.environ.get("GROQ_API_KEY", os.environ.get("GEMINI_API_KEY", "dummy")),
+    base_url=os.environ.get("AI_BASE_URL", "https://api.groq.com/openai/v1")
 )
 
 BATCH_SIZE = 30  # reviews per batch to stay within token limits
 
+
+def _parse_json_response(content: str) -> Dict[str, Any]:
+    if not content:
+        raise ValueError("Empty response content")
+    content = content.strip()
+    if content.startswith("```json"):
+        content = content[7:]
+    elif content.startswith("```"):
+        content = content[3:]
+    if content.endswith("```"):
+        content = content[:-3]
+    content = content.strip()
+    try:
+        return json.loads(content)
+    except Exception as e:
+        print(f"FAILED TO PARSE JSON. RAW CONTENT:\n{content}")
+        raise ValueError(f"Invalid JSON response: {str(e)}")
 
 def _format_reviews_for_prompt(reviews: List[Dict[str, Any]]) -> str:
     lines = []
@@ -42,12 +59,13 @@ Return this exact JSON structure:
 }}"""
 
     response = await client.chat.completions.create(
-        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
+        model=os.environ.get("AI_MODEL", "llama-3.1-8b-instant"),
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         response_format={"type": "json_object"}
     )
-    return json.loads(response.choices[0].message.content)
+    raw_content = response.choices[0].message.content
+    return _parse_json_response(raw_content)
 
 
 async def _detect_language(reviews: List[Dict[str, Any]]) -> str:
@@ -57,7 +75,7 @@ async def _detect_language(reviews: List[Dict[str, Any]]) -> str:
 Text: {sample}"""
     
     response = await client.chat.completions.create(
-        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
+        model=os.environ.get("AI_MODEL", "llama-3.1-8b-instant"),
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
         max_tokens=10
@@ -122,10 +140,11 @@ Respond in {language} with ONLY a valid JSON object:
 }}"""
 
     final_response = await client.chat.completions.create(
-        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
+        model=os.environ.get("AI_MODEL", "llama-3.1-8b-instant"),
         messages=[{"role": "user", "content": synthesis_prompt}],
         temperature=0.4,
         response_format={"type": "json_object"}
     )
     
-    return json.loads(final_response.choices[0].message.content)
+    raw_content = final_response.choices[0].message.content
+    return _parse_json_response(raw_content)

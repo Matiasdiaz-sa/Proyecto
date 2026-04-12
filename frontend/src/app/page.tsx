@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Review, Report, Msg, State } from "@/types";
-import { analyzeBusiness, scrapeReviews, sendChatMessage } from "@/api/client";
+import { analyzeBusiness, scrapeReviews, sendChatMessageStream } from "@/api/client";
 import { SetupView } from "@/components/views/SetupView";
 import { LoadingView } from "@/components/views/LoadingView";
 import { ReportView } from "@/components/views/ReportView";
@@ -52,12 +52,26 @@ export default function App() {
     const t = (text ?? input).trim();
     if (!t || typing) return;
     const updated = [...msgs, { role: "user" as const, content: t }];
-    setMsgs(updated); setInput(""); setTyping(true);
+    setMsgs([...updated, { role: "assistant", content: "" }]); 
+    setInput(""); setTyping(true);
     try {
-      const reply = await sendChatMessage(t, bizName, updated.slice(0, -1), reviews, report);
-      setMsgs(p => [...p, { role: "assistant", content: reply }]);
+      await sendChatMessageStream(t, bizName, msgs, reviews, report, (content) => {
+        setMsgs(p => {
+          const newMsgs = [...p];
+          newMsgs[newMsgs.length - 1] = { ...newMsgs[newMsgs.length - 1], content };
+          return newMsgs;
+        });
+      });
     } catch (e) {
-      setMsgs(p => [...p, { role: "assistant", content: `⚠️ ${e instanceof Error ? e.message : "Error"}` }]);
+      setMsgs(p => {
+        const newMsgs = [...p];
+        const last = newMsgs[newMsgs.length - 1];
+        newMsgs[newMsgs.length - 1] = { 
+          ...last, 
+          content: last.content + (last.content ? `\n\n` : "") + `⚠️ ${e instanceof Error ? e.message : "Error"}`
+        };
+        return newMsgs;
+      });
     } finally {
       setTyping(false);
     }

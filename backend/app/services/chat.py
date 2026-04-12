@@ -4,8 +4,8 @@ from typing import List, Dict, Any
 from openai import AsyncOpenAI
 
 client = AsyncOpenAI(
-    api_key="ollama", # Not actually used by Ollama, but required by openai library
-    base_url=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
+    api_key=os.environ.get("GROQ_API_KEY", os.environ.get("GEMINI_API_KEY", "dummy")),
+    base_url=os.environ.get("AI_BASE_URL", "https://api.groq.com/openai/v1")
 )
 
 
@@ -47,15 +47,16 @@ INSTRUCCIONES:
 """
 
 
-async def chat_with_analyst(
+async def stream_chat_with_analyst(
     message: str,
     conversation_history: List[Dict[str, str]],
     reviews: List[Dict[str, Any]],
     business_name: str = "el negocio",
     analysis_report: Dict[str, Any] = None
-) -> str:
+):
     """
-    Chat with the review analyst. Uses reviews and the pre-generated report as context.
+    Chat with the review analyst returning an async generator of Server-Sent Events.
+    Uses reviews and the pre-generated report as context.
     """
     reviews_context = _build_reviews_context(reviews, business_name)
     report = analysis_report or {}
@@ -81,11 +82,17 @@ async def chat_with_analyst(
     # Add current user message
     messages.append({"role": "user", "content": message})
 
-    response = await client.chat.completions.create(
-        model=os.environ.get("OLLAMA_MODEL", "glm-5.1:cloud"),
+    response_stream = await client.chat.completions.create(
+        model=os.environ.get("AI_MODEL", "llama-3.1-8b-instant"),
         messages=messages,
         temperature=0.6,
-        max_tokens=600
+        max_tokens=600,
+        stream=True
     )
 
-    return response.choices[0].message.content
+    async for chunk in response_stream:
+        content = chunk.choices[0].delta.content
+        if content:
+            yield f"data: {json.dumps({'content': content})}\n\n"
+    
+    yield "data: [DONE]\n\n"
