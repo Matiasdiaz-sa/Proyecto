@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+import asyncio
 from datetime import datetime, timezone
 from app.database import get_database
 from app.schemas import AnalyzeRequest
@@ -20,33 +21,41 @@ async def analyze_business(request: AnalyzeRequest):
     all_reviews = []
     sources_used = []
 
-    # 1. Google Maps reviews
-    if request.maps_url:
+    async def fetch_maps():
+        limit = min(request.maps_limit or 100, 300)
         try:
-            limit = min(request.maps_limit or 100, 300)  # cap at 300
             maps_reviews = await scrape_google_maps_reviews(request.maps_url, limit)
             for r in maps_reviews:
                 r["source"] = "google_maps"
-            all_reviews.extend(maps_reviews)
-            sources_used.append(f"Google Maps ({len(maps_reviews)} reseñas)")
-
-            # Save to MongoDB
             if maps_reviews:
                 db = get_database()
                 collection = db["reviews"]
                 docs = [{**r, "source_url": request.maps_url, "scraped_at": datetime.now(timezone.utc)} for r in maps_reviews]
                 await collection.insert_many(docs)
+            return maps_reviews, f"Google Maps ({len(maps_reviews)} reseñas)"
         except Exception as e:
-            sources_used.append(f"Google Maps (error: {str(e)[:80]})")
+            return [], f"Google Maps (error: {str(e)[:80]})"
 
-    # 2. Website reviews
-    if request.website_url:
+    async def fetch_web():
         try:
             web_reviews = await scrape_website_reviews(request.website_url)
-            all_reviews.extend(web_reviews)
-            sources_used.append(f"Sitio web ({len(web_reviews)} reseñas)")
+            for r in web_reviews:
+                r["source"] = "website"
+            return web_reviews, f"Sitio web ({len(web_reviews)} reseñas)"
         except Exception as e:
-            sources_used.append(f"Sitio web (error: {str(e)[:80]})")
+            return [], f"Sitio web (error: {str(e)[:80]})"
+
+    tasks = []
+    if request.maps_url:
+        tasks.append(fetch_maps())
+    if request.website_url:
+        tasks.append(fetch_web())
+
+    if tasks:
+        results = await asyncio.gather(*tasks)
+        for revs, source_msg in results:
+            all_reviews.extend(revs)
+            sources_used.append(source_msg)
 
     # 3. Manual reviews
     if request.manual_reviews:

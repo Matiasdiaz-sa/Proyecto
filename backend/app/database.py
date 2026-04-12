@@ -17,6 +17,15 @@ async def connect_to_mongo():
         tls=True,
         tlsAllowInvalidCertificates=True
     )
+    # Background index creation for optimal Workspace loading
+    try:
+        db = client[MONGO_DB_NAME]
+        await db["reports"].create_index(
+            [("user_id", 1), ("created_at", -1)],
+            background=True
+        )
+    except Exception as e:
+        print(f"Index creation failed: {e}")
 
 
 async def close_mongo_connection():

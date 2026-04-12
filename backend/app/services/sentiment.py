@@ -2,6 +2,7 @@ import os
 import json
 from typing import List, Dict, Any
 from openai import AsyncOpenAI
+import asyncio
 
 client = AsyncOpenAI(
     api_key=os.environ.get("GROQ_API_KEY", os.environ.get("GEMINI_API_KEY", "dummy")),
@@ -97,14 +98,15 @@ async def analyze_reviews(
     # Detect language from reviews
     language = await _detect_language(reviews)
 
-    # Process in batches
+    # Process in batches using asyncio.gather for massive concurrency
     batches = [reviews[i:i + BATCH_SIZE] for i in range(0, len(reviews), BATCH_SIZE)]
-    batch_results = []
+    tasks = []
     
     for batch in batches:
         text = _format_reviews_for_prompt(batch)
-        result = await _analyze_batch(text, language)
-        batch_results.append(result)
+        tasks.append(_analyze_batch(text, language))
+
+    batch_results = await asyncio.gather(*tasks)
 
     # Aggregate batch results
     avg_score = sum(b.get("sentiment_score", 5) for b in batch_results) / len(batch_results)

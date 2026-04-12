@@ -12,7 +12,7 @@ client = AsyncOpenAI(
 def _build_reviews_context(reviews: List[Dict[str, Any]], business_name: str) -> str:
     """Format reviews as a compact context block for the system prompt."""
     lines = []
-    for i, r in enumerate(reviews[:150], 1):  # cap at 150 for token safety
+    for i, r in enumerate(reviews[:40], 1):  # cap at 40 for token safety and speed
         author = r.get("author", "Anónimo")
         rating = r.get("stars") or r.get("rating", "?")
         text = (r.get("text") or "").strip()
