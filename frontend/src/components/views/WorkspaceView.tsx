@@ -58,8 +58,8 @@ export function WorkspaceView({
         </div>
       </header>
       
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "3rem 1.5rem", width: "100%" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>Tus Reportes Recientes</h1>
+      <main className="w-full max-w-[720px] lg:max-w-5xl mx-auto px-6 py-12 lg:py-16">
+        <h1 className="text-2xl lg:text-3xl font-bold mb-8 text-[var(--text)]">Tus Reportes Recientes</h1>
         {error && (
           <div style={{ color: "red", background: "var(--s1)", padding: 12, borderRadius: 4 }}>
             {error}
@@ -72,24 +72,27 @@ export function WorkspaceView({
           </div>
         )}
         
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-6">
           {reports.map((r, i) => (
             <div 
               key={i} 
-              className="card" 
+              className="card flex flex-col justify-between p-6 cursor-pointer border border-[var(--s2)] hover:bg-[#1a1a1a] hover-lift animate-fade-up" 
+              style={{ animationDelay: `${i * 0.1}s`, animationFillMode: "both" }}
               onClick={() => {
                 setReport(r.report);
                 setBizName(r.business_name || "");
                 setReviews([]); // Optionally, we'd store reviews, but empty list works for displaying report since reviews length is read
                 setState("report");
               }}
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem", cursor: "pointer", border: "1px solid var(--s2)" }}
             >
-              <div>
-                <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "1.1rem" }}>{r.business_name || "Negocio Analizado"}</div>
-                <div className="label">{r.report?.total_reviews_analyzed} reseñas · Score {r.report?.overall_score?.toFixed(1)}</div>
+              <div className="mb-4 flex-1">
+                <div className="font-semibold text-[var(--text)] text-lg mb-1">{r.business_name || "Negocio Analizado"}</div>
+                <div className="label">{r.report?.total_reviews_analyzed} reseñas · Score {r.report?.overall_score?.toFixed(1)}/10</div>
               </div>
-              <div style={{ fontSize: "1.5rem", opacity: 0.5 }}>→</div>
+              <div className="text-[#a1a1aa] text-sm flex items-center justify-between">
+                <span>Ver análisis detallado</span>
+                <span className="text-xl">→</span>
+              </div>
             </div>
           ))}
         </div>

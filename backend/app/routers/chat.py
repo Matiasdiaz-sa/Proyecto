@@ -19,7 +19,7 @@ async def chat_endpoint(request: ChatRequest):
     # Load from Maps if URL provided and no reviews passed
     if request.maps_url and not reviews:
         try:
-            limit = min(request.maps_limit or 50, 300)
+            limit = min(request.maps_limit or 50, 1000)
             reviews = await scrape_google_maps_reviews(request.maps_url, limit)
 
             # Save to MongoDB

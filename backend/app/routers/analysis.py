@@ -22,7 +22,7 @@ async def analyze_business(request: AnalyzeRequest):
     sources_used = []
 
     async def fetch_maps():
-        limit = min(request.maps_limit or 100, 300)
+        limit = min(request.maps_limit or 100, 1000)
         try:
             maps_reviews = await scrape_google_maps_reviews(request.maps_url, limit)
             for r in maps_reviews:

@@ -56,18 +56,17 @@ export function ChatView({ bizName, reviews, report, setState, msgs, typing, sen
       </header>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: 12 }}>
-        {msgs.map((m, i) => <Bubble key={i} msg={m} />)}
-        {typing && <Dots />}
-        <div ref={endRef} />
+      <div className="flex-1 overflow-y-auto flex flex-col animate-fade-up">
+        <div className="w-full max-w-[800px] mx-auto p-5 py-8 flex flex-col gap-4 flex-1">
+          {msgs.map((m, i) => <Bubble key={i} msg={m} />)}
+          {typing && <Dots />}
+          <div ref={endRef} />
+        </div>
       </div>
 
       {/* Suggestions */}
       {msgs.length === 1 && (
-        <div style={{
-          padding: "0 1.25rem 0.75rem",
-          display: "flex", gap: 6, flexWrap: "wrap",
-        }}>
+        <div className="w-full max-w-[800px] mx-auto px-5 pb-4 flex gap-2 flex-wrap justify-center lg:justify-start">
           {SUGGESTIONS.map((q, i) => (
             <button key={i} className="suggestion-chip" onClick={() => send(q)}>{q}</button>
           ))}
@@ -79,7 +78,7 @@ export function ChatView({ bizName, reviews, report, setState, msgs, typing, sen
         borderTop: "1px solid var(--s2)", background: "var(--s1)",
         padding: "0.875rem 1.25rem", flexShrink: 0,
       }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", alignItems: "flex-end", gap: 8 }}>
+        <div className="w-full max-w-[800px] mx-auto flex items-end gap-2">
           <textarea
             ref={inputRef}
             rows={1}
