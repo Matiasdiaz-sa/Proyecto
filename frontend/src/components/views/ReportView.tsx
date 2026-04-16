@@ -67,10 +67,10 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
         </div>
       </header>
 
-      <main className="w-full max-w-[720px] lg:max-w-6xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-12 lg:gap-16">
+      <main className="w-full max-w-[720px] lg:max-w-5xl mx-auto px-6 py-12 lg:py-16 flex flex-col lg:flex-row gap-10 lg:gap-16">
         
         {/* Left Sidebar: Score hero (Sticky on desktop) */}
-        <div className="lg:w-1/3 flex flex-col animate-fade-up">
+        <div className="lg:w-2/5 flex flex-col animate-fade-up">
           <div className="lg:sticky lg:top-28 text-center lg:text-left mb-6 lg:mb-0">
             <div className="flex justify-center lg:justify-start">
               <Gauge score={report.overall_score} />
@@ -89,19 +89,7 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
               <span className="chip">📊 {report.total_reviews_analyzed} analizadas</span>
             </div>
 
-            <div className="hidden lg:block mt-8">
-              {isSignedIn ? (
-                <button className="btn-primary no-print w-full" onClick={startChat}>
-                  Conversar sobre este informe →
-                </button>
-              ) : (
-                <SignInButton mode="modal" fallbackRedirectUrl="/">
-                  <button className="btn-primary no-print w-full flex items-center justify-center gap-2">
-                    🔒 Iniciar sesión para conversar
-                  </button>
-                </SignInButton>
-              )}
-            </div>
+
           </div>
         </div>
 
@@ -110,7 +98,7 @@ export function ReportView({ report, bizName, reviews, setState, startChat }: Pr
         </div>
 
         {/* Right Content: Tabs and details */}
-        <div className="lg:w-2/3 animate-fade-up-delay-1">
+        <div className="lg:w-3/5 animate-fade-up-delay-1">
           <div className="no-print" style={{ display: "flex", borderBottom: "1px solid var(--s2)", marginBottom: "1.75rem" }}>
             <button className={tab === "pos" ? "tab active" : "tab"} onClick={() => setTab("pos")}>Puntos fuertes</button>
             <button className={tab === "neg" ? "tab active" : "tab"} onClick={() => setTab("neg")}>Áreas de mejora</button>
